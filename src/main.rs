@@ -57,7 +57,7 @@ fn is_inside_work_tree() -> bool {
     let cwd = current_dir().unwrap();
 
     for wd in cwd.ancestors() {
-        println!("{:?}", wd);
+        //println!("{:?}", wd);
         if is_work_tree(&wd) {
             return true;
         }
@@ -73,9 +73,12 @@ fn is_work_tree(wd: &Path) -> bool {
                 if git.is_dir() {
                     true
                 } else {
-                    false
+                    if metadata(Path::new(".git/objects")).is_ok() {
+                        true
+                    } else {
+                        metadata(Path::new("./objects")).is_ok()
+                    }
                 }
-                //if let objects = metadata(Path::new(".objects"))
             } else {
                 false
             }
