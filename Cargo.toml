@@ -1,0 +1,11 @@
+[package]
+name = "stick-insect"
+description = "A CLI tool which prints the current git branch"
+version = "0.1.0"
+authors = ["Matt Provost <mprovost@termcap.net>"]
+edition = "2018"
+license = "BSD-3-Clause"
+categories = ["command-line-utilities", "development-tools"]
+keywords   = ["git"]
+
+[dependencies]
