@@ -29,13 +29,13 @@ fn main() {
 }
 
 fn resolve_indirect_ref(refstring: &String) -> Result<&str, GitParseError> {
-    if refstring.ends_with('\n') {
-    }
     if refstring.starts_with("ref: ") {
         Ok(refstring.trim_start_matches("ref: "))
     } else {
+        // check for a SHA-1
         if refstring.len() == 40 {
-            Ok(refstring)
+            // just return the first 7 characters of the SHA
+            Ok(&refstring[..7])
         } else {
             Err(GitParseError)
         }
