@@ -43,16 +43,6 @@ fn resolve_indirect_ref(refstring: &String) -> Result<&str, GitParseError> {
 }
 
 // git rev-parse --is-inside-work-tree
-/*
-getcwd("/home/mprovost", 4096)          = 15                                                 
-stat(".", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0                                     
-stat(".git", 0x7ffc3747b3e0)            = -1 ENOENT (No such file or directory)              
-access(".git/objects", X_OK)            = -1 ENOENT (No such file or directory)              
-access("./objects", X_OK)               = -1 ENOENT (No such file or directory)              
-stat("..", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0                                    
-chdir("..")                             = 0                                                  
-stat(".git", 0x7ffc3747b3e0)            = -1 ENOENT (No such file or directory)
-*/
 fn is_inside_work_tree() -> bool {
     let cwd = current_dir().unwrap();
 
@@ -65,6 +55,16 @@ fn is_inside_work_tree() -> bool {
     false
 }
 
+/*
+getcwd("/home/mprovost", 4096)          = 15                                                 
+stat(".", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0                                     
+stat(".git", 0x7ffc3747b3e0)            = -1 ENOENT (No such file or directory)              
+access(".git/objects", X_OK)            = -1 ENOENT (No such file or directory)              
+access("./objects", X_OK)               = -1 ENOENT (No such file or directory)              
+stat("..", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0                                    
+chdir("..")                             = 0                                                  
+stat(".git", 0x7ffc3747b3e0)            = -1 ENOENT (No such file or directory)
+*/
 fn is_work_tree(wd: &Path) -> bool {
     if let Ok(stat) = metadata(wd) {
         set_current_dir(&wd).unwrap();
