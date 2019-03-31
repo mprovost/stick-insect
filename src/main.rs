@@ -1,36 +1,45 @@
 use std::path::Path;
 use std::fs::{File, metadata};
-use std::io::{BufReader, BufRead};
+use std::io::{BufReader, BufRead, stdout, Write};
 use std::env::{current_dir, set_current_dir};
+use std::ffi::OsString;
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
 #[derive(Debug, Clone)]
 struct GitParseError;
 
 fn main() {
     if is_inside_work_tree() {
+        let mut stdout = stdout();
         let git_dir   = Path::new(".git");
         let head_path = git_dir.join("HEAD");
-
         let mut head_file = BufReader::new(File::open(head_path).unwrap());
+        let mut line = Vec::new();
 
-        let mut head_ref = String::new();
-        
-        head_file.read_line(&mut head_ref).unwrap();
+        if head_file.read_until(b'\n', &mut line).unwrap() > 0 {
+            // trim newline
+            let (last, rest) = line.split_last().unwrap();
+            let sl = if *last == b'\n' {
+                rest
+            } else {
+                &line
+            };
 
-        let head = &head_ref.trim_end().to_string();
+            let branch = OsString::from_vec(resolve_indirect_ref(sl).unwrap().to_vec());
 
-        let branch_path = Path::new(resolve_indirect_ref(head).unwrap());
+            let branch_path = Path::new(&branch);
 
-        println!("{}", branch_path.file_name().unwrap().to_str().unwrap());
+            stdout.write_all(branch_path.file_name().unwrap().as_bytes()).unwrap();
+        }
     } else {
         eprintln!("fatal: Not a git repository (or any of the parent directories): .git");
         std::process::exit(128);
     }
 }
 
-fn resolve_indirect_ref(refstring: &String) -> Result<&str, GitParseError> {
-    if refstring.starts_with("ref: ") {
-        Ok(refstring.trim_start_matches("ref: "))
+fn resolve_indirect_ref(refstring: &[u8]) -> Result<&[u8], GitParseError> {
+    if refstring.starts_with(b"ref: ") {
+        Ok(&refstring[5..])
     } else {
         // check for a SHA-1
         if refstring.len() == 40 {
