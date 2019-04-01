@@ -17,19 +17,12 @@ fn main() {
         let mut line = Vec::new();
 
         if head_file.read_until(b'\n', &mut line).unwrap() > 0 {
-            // trim newline
-            let (last, rest) = line.split_last().unwrap();
-            let sl = if *last == b'\n' {
-                rest
-            } else {
-                &line
-            };
-
-            let branch = OsString::from_vec(resolve_indirect_ref(sl).unwrap().to_vec());
+            let branch = OsString::from_vec(resolve_indirect_ref(&line).unwrap().to_vec());
 
             let branch_path = Path::new(&branch);
 
             stdout.write_all(branch_path.file_name().unwrap().as_bytes()).unwrap();
+            println!(); //newline
         }
     } else {
         eprintln!("fatal: Not a git repository (or any of the parent directories): .git");
@@ -38,13 +31,21 @@ fn main() {
 }
 
 fn resolve_indirect_ref(refstring: &[u8]) -> Result<&[u8], GitParseError> {
-    if refstring.starts_with(b"ref: ") {
-        Ok(&refstring[5..])
+    // check for newline
+    let (last, rest) = refstring.split_last().unwrap();
+    let sl = if *last == b'\n' {
+        rest
+    } else {
+        &refstring
+    };
+
+    if sl.starts_with(b"ref: ") {
+        Ok(&sl[5..])
     } else {
         // check for a SHA-1
-        if refstring.len() == 40 {
+        if sl.len() == 40 {
             // just return the first 7 characters of the SHA
-            Ok(&refstring[..7])
+            Ok(&sl[..7])
         } else {
             Err(GitParseError)
         }
